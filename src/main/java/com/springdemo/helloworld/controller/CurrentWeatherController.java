@@ -15,7 +15,8 @@ import java.util.LinkedHashMap;
 @Controller
 public class CurrentWeatherController {
 
-    SqlController sqlController = new SqlController();
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @GetMapping()
     public String getMainPage(Model model) {
@@ -23,7 +24,7 @@ public class CurrentWeatherController {
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<LinkedHashMap> response = restTemplate.getForEntity(url, LinkedHashMap.class);
 
-        sqlController.testinsert();
+        testinsert();
 
         LinkedHashMap answer = response.getBody();
         ArrayList<LinkedHashMap> arr = (ArrayList<LinkedHashMap>) answer.get("weather");
@@ -33,5 +34,13 @@ public class CurrentWeatherController {
         CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"), (String) arrH.get("main"), (Double) main.get("temp") - 273.15, (Double) main.get("feels_like") - 273.15);
         model.addAttribute("currentWeather", currentWeather);
         return "main";
+    }
+
+    public void testinsert() {
+        String sql = "INSERT INTO wheather (location, temp, temp_feels_like, lat, lon) VALUES ('Novaya Gollandiya', 274.46 - 273.15, 269.87 - 273.15, 59.9375, 30.3086)";
+        int rows = jdbcTemplate.update(sql);
+        if (rows > 0) {
+            System.out.println("A new row has been inserted.");
+        }
     }
 }
