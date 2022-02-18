@@ -20,9 +20,8 @@ public class CurrentWeatherController {
 
     @GetMapping()
     public String getMainPage(Model model) {
-        final String url = "https://api.openweathermap.org/data/2.5/weather?lat=59.937500&lon=30.308611&appid=32f50aa50c0a9f5120a6de75767885e4";
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<LinkedHashMap> response = restTemplate.getForEntity(url, LinkedHashMap.class);
+
+        ResponseEntity<LinkedHashMap> response = getWeather();
 
         testinsert();
 
@@ -34,6 +33,12 @@ public class CurrentWeatherController {
         CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"), (String) arrH.get("main"), (Double) main.get("temp") - 273.15, (Double) main.get("feels_like") - 273.15);
         model.addAttribute("currentWeather", currentWeather);
         return "main";
+    }
+
+    private ResponseEntity<LinkedHashMap> getWeather() {
+        final String url = "https://api.openweathermap.org/data/2.5/weather?lat=59.937500&lon=30.308611&appid=32f50aa50c0a9f5120a6de75767885e4";
+        RestTemplate restTemplate = new RestTemplate();
+        return  restTemplate.getForEntity(url, LinkedHashMap.class);
     }
 
     public void testinsert() {
