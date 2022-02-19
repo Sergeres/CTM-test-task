@@ -2,8 +2,10 @@ package com.springdemo.helloworld.controller;
 
 import com.springdemo.helloworld.dto.CurrentWeather;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,35 +19,50 @@ public class CurrentWeatherController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private Environment env;
 
     @GetMapping()
     public String getMainPage(Model model) {
 
-        ResponseEntity<LinkedHashMap> response = getWeather();
+        LinkedHashMap answer = getWeather().getBody();
+        LinkedHashMap weather = parseWeather(answer);
+        LinkedHashMap temperature = parseTemperature(answer);
 
-        testinsert();
-
-        LinkedHashMap answer = response.getBody();
-        ArrayList<LinkedHashMap> arr = (ArrayList<LinkedHashMap>) answer.get("weather");
-        LinkedHashMap arrH = arr.get(0);
-        LinkedHashMap main = (LinkedHashMap) answer.get("main");
-
-        CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"), (String) arrH.get("main"), (Double) main.get("temp") - 273.15, (Double) main.get("feels_like") - 273.15);
+        CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"), (String) weather.get("main"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
         model.addAttribute("currentWeather", currentWeather);
         return "main";
     }
 
     private ResponseEntity<LinkedHashMap> getWeather() {
-        final String url = "https://api.openweathermap.org/data/2.5/weather?lat=59.937500&lon=30.308611&appid=32f50aa50c0a9f5120a6de75767885e4";
+        final String url = "https://api.openweathermap.org/data/2.5/weather?lat=" + env.getProperty("constant.lat") + "&lon=" + env.getProperty("constant.lon") + "&appid=" + env.getProperty("constant.api") ;
         RestTemplate restTemplate = new RestTemplate();
         return  restTemplate.getForEntity(url, LinkedHashMap.class);
     }
 
-    public void testinsert() {
-        String sql = "INSERT INTO wheather (location, temp, temp_feels_like, lat, lon) VALUES ('Novaya Gollandiya', 274.46 - 273.15, 269.87 - 273.15, 59.9375, 30.3086)";
+    public void putDataToDb(String loc, Double temp, Double feelsLike) {
+        String sql = "INSERT INTO wheather (location, temp, temp_feels_like, lat, lon) VALUES ('" + loc + "', " + temp + ", " + feelsLike +  "," + env.getProperty("constant.lat") + "," + env.getProperty("constant.lon") + ")";
         int rows = jdbcTemplate.update(sql);
         if (rows > 0) {
             System.out.println("A new row has been inserted.");
         }
+    }
+
+    @Scheduled (initialDelayString = "3000", fixedDelayString = "60000")
+    public void getNewWeather () {
+
+        LinkedHashMap answer  = getWeather().getBody();
+        LinkedHashMap temperature = parseTemperature(answer);
+
+        putDataToDb((String) answer.get("name"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
+    }
+
+    public LinkedHashMap parseTemperature (LinkedHashMap response) {
+        return (LinkedHashMap) response.get("main");
+    }
+
+    public LinkedHashMap parseWeather (LinkedHashMap response) {
+        ArrayList<LinkedHashMap> arr = (ArrayList<LinkedHashMap>) response.get("weather");
+        return arr.get(0);
     }
 }
