@@ -1,6 +1,8 @@
 package com.springdemo.helloworld.controller;
 
 import com.springdemo.helloworld.dto.CurrentWeather;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,8 @@ public class CurrentWeatherController {
     @Autowired
     private Environment env;
 
+    Logger logger = LoggerFactory.getLogger(CurrentWeatherController.class);
+
     @GetMapping()
     public String getMainPage(Model model) {
 
@@ -37,6 +41,7 @@ public class CurrentWeatherController {
     private ResponseEntity<LinkedHashMap> getWeather() {
         final String url = "https://api.openweathermap.org/data/2.5/weather?lat=" + env.getProperty("constant.lat") + "&lon=" + env.getProperty("constant.lon") + "&appid=" + env.getProperty("constant.api") ;
         RestTemplate restTemplate = new RestTemplate();
+        logger.debug("Request for api completed");
         return  restTemplate.getForEntity(url, LinkedHashMap.class);
     }
 
@@ -44,7 +49,7 @@ public class CurrentWeatherController {
         String sql = "INSERT INTO wheather (location, temp, temp_feels_like, lat, lon) VALUES ('" + loc + "', " + temp + ", " + feelsLike +  "," + env.getProperty("constant.lat") + "," + env.getProperty("constant.lon") + ")";
         int rows = jdbcTemplate.update(sql);
         if (rows > 0) {
-            System.out.println("A new row has been inserted.");
+            logger.info("A new row has been inserted.");
         }
     }
 
