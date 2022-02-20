@@ -13,7 +13,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 @Controller
@@ -24,14 +23,16 @@ public class CurrentWeatherController {
     @Autowired
     private Environment env;
 
+    ParseController parseController = new ParseController();
+
     Logger logger = LoggerFactory.getLogger(CurrentWeatherController.class);
 
     @GetMapping()
     public String getMainPage(Model model) {
 
         LinkedHashMap answer = getWeather().getBody();
-        LinkedHashMap weather = parseWeather(answer);
-        LinkedHashMap temperature = parseTemperature(answer);
+        LinkedHashMap weather = parseController.parseWeather(answer);
+        LinkedHashMap temperature = parseController.parseTemperature(answer);
 
         CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"), (String) weather.get("main"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
         model.addAttribute("currentWeather", currentWeather);
@@ -57,17 +58,8 @@ public class CurrentWeatherController {
     public void getNewWeather () {
 
         LinkedHashMap answer  = getWeather().getBody();
-        LinkedHashMap temperature = parseTemperature(answer);
+        LinkedHashMap temperature = parseController.parseTemperature(answer);
 
         putDataToDb((String) answer.get("name"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
-    }
-
-    public LinkedHashMap parseTemperature (LinkedHashMap response) {
-        return (LinkedHashMap) response.get("main");
-    }
-
-    public LinkedHashMap parseWeather (LinkedHashMap response) {
-        ArrayList<LinkedHashMap> arr = (ArrayList<LinkedHashMap>) response.get("weather");
-        return arr.get(0);
     }
 }
