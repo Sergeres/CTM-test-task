@@ -1,9 +1,11 @@
 package com.springdemo.helloworld.controller;
 
 import com.springdemo.helloworld.dto.CurrentWeather;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -15,13 +17,21 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
 
+@Slf4j
 @Controller
 public class CurrentWeatherController {
 
+    private final JdbcTemplate jdbcTemplate;
+    private final Environment env;
+    private final RestTemplate restTemplate;
+
     @Autowired
-    private JdbcTemplate jdbcTemplate;
-    @Autowired
-    private Environment env;
+    public CurrentWeatherController(JdbcTemplate jdbcTemplate, Environment env, RestTemplateBuilder restTemplateBuilder){
+        this.jdbcTemplate = jdbcTemplate;
+        this.env = env;
+        this.restTemplate = restTemplateBuilder.build();
+    }
+
 
     ParseController parseController = new ParseController();
 
@@ -40,9 +50,15 @@ public class CurrentWeatherController {
     }
 
     private ResponseEntity<LinkedHashMap> getWeather() {
-        final String url = "https://api.openweathermap.org/data/2.5/weather?lat=" + env.getProperty("constant.lat") + "&lon=" + env.getProperty("constant.lon") + "&appid=" + env.getProperty("constant.api") ;
-        RestTemplate restTemplate = new RestTemplate();
+        final String url = String.join("", "https://api.openweathermap.org/data/2.5/weather?lat=",
+                env.getProperty("constant.lat"),
+                "&lon=",
+                env.getProperty("constant.lon"),
+                "&appid=",
+                env.getProperty("constant.api"));
+
         logger.debug("Request for api completed");
+
         return  restTemplate.getForEntity(url, LinkedHashMap.class);
     }
 
