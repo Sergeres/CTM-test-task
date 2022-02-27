@@ -44,7 +44,10 @@ public class CurrentWeatherController {
         LinkedHashMap weather = parseController.parseWeather(answer);
         LinkedHashMap temperature = parseController.parseTemperature(answer);
 
-        CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"), (String) weather.get("main"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
+        CurrentWeather currentWeather = new CurrentWeather((String) answer.get("name"),
+                (String) weather.get("main"),
+                (Double) temperature.get("temp") - 273.15,
+                (Double) temperature.get("feels_like") - 273.15);
         model.addAttribute("currentWeather", currentWeather);
         return "main";
     }

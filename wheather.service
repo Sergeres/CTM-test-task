@@ -1,0 +1,15 @@
+[Unit]
+Description=Погодный сервис
+
+[Service]
+User=sergey
+ExecStart=/home/sergey/installation/java/bin/java -Dspring.profiles.active=prod -jar /var/wheatherApp/hello-world-0.0.1-SNAPSHOT.jar
+ExitStatus=143
+
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
