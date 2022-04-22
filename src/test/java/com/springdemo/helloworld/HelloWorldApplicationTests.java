@@ -37,7 +37,7 @@ class HelloWorldApplicationTests {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Местоположения")))
-                .andExpect(content().string(containsString("Состояние погоды")))
+                .andExpect(content().string(containsString("Показания погоды")))
                 .andExpect(content().string(containsString("Температура")));
     }
 

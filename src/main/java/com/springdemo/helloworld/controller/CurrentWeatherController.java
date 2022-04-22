@@ -52,6 +52,7 @@ public class CurrentWeatherController {
         return "main";
     }
 
+    @Scheduled(cron = "0 */1 * * * *")
     private ResponseEntity<LinkedHashMap> getWeather() {
         final String url = String.join("", "https://api.openweathermap.org/data/2.5/weather?lat=",
                 env.getProperty("constant.lat"),
@@ -60,25 +61,25 @@ public class CurrentWeatherController {
                 "&appid=",
                 env.getProperty("constant.api"));
 
-        logger.debug("Request for api completed");
+        logger.info("Request for api completed");
 
         return  restTemplate.getForEntity(url, LinkedHashMap.class);
     }
 
-    public void putDataToDb(String loc, Double temp, Double feelsLike) {
-        String sql = "INSERT INTO wheather (location, temp, temp_feels_like, lat, lon) VALUES ('" + loc + "', " + temp + ", " + feelsLike +  "," + env.getProperty("constant.lat") + "," + env.getProperty("constant.lon") + ")";
-        int rows = jdbcTemplate.update(sql);
-        if (rows > 0) {
-            logger.info("A new row has been inserted.");
-        }
-    }
+//    public void putDataToDb(String loc, Double temp, Double feelsLike) {
+//        String sql = "INSERT INTO wheather (location, temp, temp_feels_like, lat, lon) VALUES ('" + loc + "', " + temp + ", " + feelsLike +  "," + env.getProperty("constant.lat") + "," + env.getProperty("constant.lon") + ")";
+//        int rows = jdbcTemplate.update(sql);
+//        if (rows > 0) {
+//            logger.info("A new row has been inserted.");
+//        }
+//    }
 
-    @Scheduled (initialDelayString = "3000", fixedDelayString = "60000")
+    @Scheduled (cron = "0 */10 * * * *")
     public void getNewWeather () {
 
         LinkedHashMap answer  = getWeather().getBody();
         LinkedHashMap temperature = parseController.parseTemperature(answer);
 
-        putDataToDb((String) answer.get("name"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
+//        putDataToDb((String) answer.get("name"), (Double) temperature.get("temp") - 273.15, (Double) temperature.get("feels_like") - 273.15);
     }
 }
